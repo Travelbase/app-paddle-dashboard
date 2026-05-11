@@ -1,0 +1,12 @@
+{
+  "name": "tessa-paddle-dashboard",
+  "version": "1.0.0",
+  "description": "Travelbase Team Paddle Dashboard",
+  "main": "serve.js",
+  "scripts": {
+    "start": "node serve.js"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}
