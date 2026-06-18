@@ -564,7 +564,9 @@
 
 <script>
 // ─── CONFIG ────────────────────────────────────────────────────────
-const PROXY_URL = "/api/export";
+// Relative (no leading slash) so it resolves under the page's base path:
+// "/api/export" locally, "/a/paddle-dashboard/api/export" on apps.travelbase.eu.
+const PROXY_URL = "api/export";
 
 // Single unified query — all trips in one call
 const UNIFIED_QUERY = { id: "999", key: "0xGTF1x-Y0ls5Gz1BswAqnc8ZCT3MR_L" };

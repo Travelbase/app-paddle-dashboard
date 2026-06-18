@@ -1,0 +1,11 @@
+.git
+node_modules
+.DS_Store
+*.log
+.env
+.claude
+docs
+README.md
+CLAUDE.md
+proxy-server.js
+Procfile
