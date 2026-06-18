@@ -1,5 +1,13 @@
 # Changelog — Team Paddle Dashboard
 
+## 2026-06-18 — Export keys moved to Secret Manager; repo renamed
+
+- Removed all 21 export-report `id`/`key` pairs from `dashboard.html`. The browser now sends only a
+  report `id`; `serve.js` attaches the key from `EXPORT_KEYS` (mounted from Secret Manager
+  `paddle-dashboard-export-keys`). Keys no longer ship to the browser or live in the repo.
+- Repo renamed `app-paddledashboard` → `app-paddle-dashboard` (consistency with other `app-*` repos);
+  WIF deploy binding updated to the new name.
+
 ## 2026-06-18 — Onboarded to apps.travelbase.eu
 
 Normalised the Lovable export into a Travelbase App on Cloud Run behind the apps-gateway:

@@ -29,11 +29,15 @@ gcloud run deploy paddle-dashboard \
 
 1. **Runtime SA:** `gcloud iam service-accounts create paddle-dashboard --project travelbase-apps`.
 2. **Deploy auth (WIF):** bind `roles/iam.workloadIdentityUser` on `gh-deploy@` for
-   `principalSet://…/attribute.repository/Travelbase/app-paddledashboard`, and set repo Actions
+   `principalSet://…/attribute.repository/Travelbase/app-paddle-dashboard`, and set repo Actions
    secrets `WIF_PROVIDER` and `DEPLOY_SERVICE_ACCOUNT` (= `gh-deploy@travelbase-apps…`).
 3. **Gateway invoke:** grant `roles/run.invoker` on the `paddle-dashboard` service to
    `apps-gateway@travelbase-apps.iam.gserviceaccount.com`.
-4. **Registry:** add `registry/paddle-dashboard.yaml` in `travelbase-apps` — this is what mounts the
+4. **Export keys (secret):** the export-report keys live in Secret Manager
+   `paddle-dashboard-export-keys` (JSON `id`→`key`); the runtime SA holds `secretAccessor` and the
+   service mounts it as `EXPORT_KEYS`
+   (`gcloud run services update paddle-dashboard --update-secrets EXPORT_KEYS=paddle-dashboard-export-keys:latest`).
+5. **Registry:** add `registry/paddle-dashboard.yaml` in `travelbase-apps` — this is what mounts the
    app on the gateway and the portal. No gateway code change is needed.
 
 ## Where logs are
@@ -45,7 +49,8 @@ gcloud run deploy paddle-dashboard \
 
 | Symptom / log event   | Meaning                                            | Action                                         |
 |-----------------------|----------------------------------------------------|------------------------------------------------|
-| Charts empty / spinner| `admin.travelbase.eu/task/export` errored          | check `external_api.failed` logs; verify the export API + report id/key |
+| Charts empty / spinner| `admin.travelbase.eu/task/export` errored          | check `external_api.failed` logs; verify the export API |
+| `400 unknown report id`| `EXPORT_KEYS` secret not mounted, or a report id has no key | confirm `EXPORT_KEYS` is mounted (`paddle-dashboard-export-keys`) and contains that id |
 | `external_api.failed` | upstream export API unreachable                    | retry; check admin.travelbase.eu status        |
 | Google 404 page       | service deployed with wrong ingress                | redeploy with `--ingress all`                  |
 | Redirect to Logto loop| not signed in / not @travelbase.eu                 | sign in with a Travelbase Google account       |
@@ -60,7 +65,7 @@ gcloud run services update-traffic paddle-dashboard \
 ## Data read/written
 
 - **Reads:** legacy Travelbase export API (`admin.travelbase.eu/task/export`) — bookings, web stats,
-  leads, per-trip detail.
+  leads, per-trip detail. Keyed by per-report keys in Secret Manager `paddle-dashboard-export-keys`.
 - **Writes:** none.
 
 ## Contacts

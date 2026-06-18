@@ -36,8 +36,10 @@ removed in favour of the gateway.)
 
 Read-only. The dashboard fetches report data from the legacy Travelbase export API
 (`admin.travelbase.eu/task/export`) via the same-origin `/api/export` proxy in `serve.js`. The
-report `id`/`key` pairs are embedded in `dashboard.html` (public report tokens, not secrets). Keep in
-sync with the manifest's `data` + `integrations` blocks. See [`docs/data-access.md`](docs/data-access.md).
+browser sends only a report `id`; `serve.js` attaches the export key from `EXPORT_KEYS` (mounted from
+Secret Manager `paddle-dashboard-export-keys`). **Export keys are secrets — keep them in Secret
+Manager, never in `dashboard.html` or the repo.** Keep in sync with the manifest's `data` +
+`integrations` blocks. See [`docs/data-access.md`](docs/data-access.md).
 
 ## Deploying
 

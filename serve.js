@@ -25,6 +25,20 @@ const BASE_PATH = (process.env.BASE_PATH || "/").replace(/\/+$/, "");
 const EXPORT_HOST = process.env.EXPORT_HOST || "admin.travelbase.eu";
 const EXPORT_PATH = process.env.EXPORT_PATH || "/task/export";
 
+// Per-report export-API keys, kept server-side. Mounted from Google Secret
+// Manager (secret `paddle-dashboard-export-keys`) as the EXPORT_KEYS env var —
+// a JSON map of report id → key. The browser sends only an `id`; serve.js
+// attaches the matching key before proxying, so the credentials never ship to
+// the client or live in the repo.
+const EXPORT_KEYS = (() => {
+  try {
+    return JSON.parse(process.env.EXPORT_KEYS || "{}");
+  } catch {
+    console.error(JSON.stringify({ severity: "ERROR", app: "paddle-dashboard", event: "config.invalid", field: "EXPORT_KEYS" }));
+    return {};
+  }
+})();
+
 const MIME = {
   ".html": "text/html",
   ".css": "text/css",
@@ -46,9 +60,28 @@ function log(event, fields = {}) {
 }
 
 function proxyExport(req, res) {
-  let body = "";
-  req.on("data", (chunk) => (body += chunk));
+  let raw = "";
+  req.on("data", (chunk) => (raw += chunk));
   req.on("end", () => {
+    let payload;
+    try {
+      payload = JSON.parse(raw || "{}");
+    } catch {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "invalid JSON body" }));
+      return;
+    }
+
+    // Attach the server-side key for the requested report; never trust a key
+    // sent by the client.
+    const key = EXPORT_KEYS[String(payload.id)];
+    if (!key) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: `unknown report id: ${payload.id ?? "(none)"}` }));
+      return;
+    }
+    const body = JSON.stringify({ ...payload, key });
+
     const options = {
       hostname: EXPORT_HOST,
       path: EXPORT_PATH,

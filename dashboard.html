@@ -569,13 +569,13 @@
 const PROXY_URL = "api/export";
 
 // Single unified query — all trips in one call
-const UNIFIED_QUERY = { id: "999", key: "0xGTF1x-Y0ls5Gz1BswAqnc8ZCT3MR_L" };
-const WEBSTATS_QUERY = { id: "715", key: "6oxeePSe9P42jWXEIf7IeA_WrFEiuz99" };
-const LEADS_QUERY = { id: "1023", key: "7V5Z-i7PsJ5DMR_HMuW5ub9f3J_SKDQS" };
+const UNIFIED_QUERY = { id: "999" };
+const WEBSTATS_QUERY = { id: "715" };
+const LEADS_QUERY = { id: "1023" };
 
 // Detailed per-trip APIs (for transport, team_size, gender, etc.)
 const DETAIL_APIS = {
-  1234: { id: "1000", key: "uAJ_56SoUl-_qTtDbpx1k587S_Lt6Ltu", transportField: "transport",
+  1234: { id: "1000", transportField: "transport",
     upsells: [
       { field: "Food",                   label: "Food" },
       { field: "camping gear",           label: "Camping Gear" },
@@ -589,7 +589,7 @@ const DETAIL_APIS = {
       { field: "checked luggage",        label: "Checked Luggage" },
     ]
   },
-  1030: { id: "1001", key: "79Ep_rlGXCPGE1XaVJVO8eorcih56RN2", transportField: "transport",
+  1030: { id: "1001", transportField: "transport",
     upsells: [
       { field: "food",                              label: "Food" },
       { field: "kampeermateriaal",                  label: "Camping Gear" },
@@ -602,7 +602,7 @@ const DETAIL_APIS = {
       { field: "checked luggage",                   label: "Checked Luggage" },
     ]
   },
-  1223: { id: "1002", key: "YLu2G9i5h4mBCqa_wQumMzdSDo0kxhdY", transportField: "transport",
+  1223: { id: "1002", transportField: "transport",
     upsells: [
       { field: "optiefood_copy",                        label: "Food" },
       { field: "campinggear_copy",                      label: "Camping Gear" },
@@ -614,7 +614,7 @@ const DETAIL_APIS = {
       { field: "kinderkorting_copy",                    label: "Child Discount" },
     ]
   },
-  1054: { id: "1003", key: "JMf8SCEAvRsDfNuKJgyUTN4McADNJgWt",
+  1054: { id: "1003",
     upsells: [
       { field: "optiefood",                        label: "Food" },
       { field: "campinggear",                      label: "Camping Gear" },
@@ -626,7 +626,7 @@ const DETAIL_APIS = {
       { field: "kinderkorting",                    label: "Child Discount" },
     ]
   },
-  1251: { id: "1006", key: "Ka6JSigWuKBJ9bpF6llc0jFuPB24lSpH", transportField: "Transport SLOV26",
+  1251: { id: "1006", transportField: "Transport SLOV26",
     upsells: [
       { field: "food",               label: "Food" },
       { field: "campinggear",        label: "Camping Gear" },
@@ -639,7 +639,7 @@ const DETAIL_APIS = {
       { field: "superflex conditions", label: "Superflex" },
     ]
   },
-  1102: { id: "1009", key: "lKRe8CJE7XZ1E2xueAsNyio_aaghQRbs", transportField: "transport",
+  1102: { id: "1009", transportField: "transport",
     upsells: [
       { field: "food",               label: "Food" },
       { field: "campinggear",        label: "Camping Gear" },
@@ -652,7 +652,7 @@ const DETAIL_APIS = {
       { field: "superflex conditions", label: "Superflex" },
     ]
   },
-  1240: { id: "1010", key: "tlF9VlkZOut4PxAQp6NVtksXP-jIicsZ", transportField: "Transport tkt25_copy",
+  1240: { id: "1010", transportField: "Transport tkt25_copy",
     upsells: [
       { field: "foodpack",               label: "Food Pack" },
       { field: "CampingGear",            label: "Camping Gear" },
@@ -664,7 +664,7 @@ const DETAIL_APIS = {
       { field: "Superflex Insurance",    label: "Superflex" },
     ]
   },
-  1033: { id: "1011", key: "QMCfa4Ic7FpVnDOzEeR-G0ABY7rireoA", transportField: "Transport tkt25",
+  1033: { id: "1011", transportField: "Transport tkt25",
     upsells: [
       { field: "foodpack",           label: "Food Pack" },
       { field: "CampingGear",        label: "Camping Gear" },
@@ -675,7 +675,7 @@ const DETAIL_APIS = {
       { field: "SuperflexInsurance", label: "Superflex" },
     ]
   },
-  1299: { id: "1013", key: "mzt7s-8xkhisFWq95MXYxIcJMWo-h5-B",
+  1299: { id: "1013",
     upsells: [
       { field: "food_copy",       label: "Food" },
       { field: "campinggear",     label: "Camping Gear" },
@@ -685,7 +685,7 @@ const DETAIL_APIS = {
       { field: "dog",             label: "Dog" },
     ]
   },
-  1298: { id: "1012", key: "MdZ3y8vF6_lFZU20BIsAugyF8KWKUFY3",
+  1298: { id: "1012",
     upsells: [
       { field: "food",           label: "Food" },
       { field: "campinggear",    label: "Camping Gear" },
@@ -697,7 +697,7 @@ const DETAIL_APIS = {
       { field: "Camping-car",    label: "Camping-Car" },
     ]
   },
-  1249: { id: "1014", key: "e19nfCogMjmrl4b_hiahV4yOsgSyxAGm",
+  1249: { id: "1014",
     upsells: [
       { field: "Foodpack",         label: "Food Pack" },
       { field: "Dog",              label: "Dog" },
@@ -707,7 +707,7 @@ const DETAIL_APIS = {
       { field: "cancelinsurance",  label: "Cancellation Insurance" },
     ]
   },
-  1267: { id: "1004", key: "kPTwBxLk6YymEF1mF7P4V_phDAKevNUD",
+  1267: { id: "1004",
     upsells: [
       { field: "Kampeermateriaal",        label: "Camping Gear" },
       { field: "Foodpack",                label: "Food Pack" },
@@ -720,7 +720,7 @@ const DETAIL_APIS = {
       { field: "Extra nacht lodge",      label: "Extra Night Lodge" },
     ]
   },
-  1107: { id: "1005", key: "XPx98ucanJfYFGdKvR1VQe6yS5Z3OKb7",
+  1107: { id: "1005",
     upsells: [
       { field: "Kampeermateriaal",        label: "Camping Gear" },
       { field: "Foodpack",                label: "Food Pack" },
@@ -734,7 +734,7 @@ const DETAIL_APIS = {
     ]
   },
   // Packraft Trail Biesbosch 2025
-  1101: { id: "1024", key: "dL0wEQmAv1aClzv36HhoOBnE_JWxbXrD",
+  1101: { id: "1024",
     upsells: [
       { field: "food",            label: "Food" },
       { field: "hond",            label: "Dog" },
@@ -745,7 +745,7 @@ const DETAIL_APIS = {
     ]
   },
   // Packraft Trail Ardennes 2025
-  1109: { id: "1025", key: "kRu1QNZPIEYjJt_BF-oBND1QZN76nIb1",
+  1109: { id: "1025",
     upsells: [
       { field: "food",            label: "Food" },
       { field: "dog",             label: "Dog" },
@@ -756,7 +756,7 @@ const DETAIL_APIS = {
     ]
   },
   // Packraft Trail Bretagne 2025
-  1176: { id: "1026", key: "KgDPjHOaLaeY1hBIs9CrWuyWrNrAadQY",
+  1176: { id: "1026",
     upsells: [
       { field: "food_copy_copy",           label: "Food" },
       { field: "campinggear_copy_copy",    label: "Camping Gear" },
@@ -766,7 +766,7 @@ const DETAIL_APIS = {
     ]
   },
   // Packraft Trail Bavaria 2025
-  1108: { id: "1027", key: "NIdA-LPK4wHlQOvbFC6oK6kg8kS_vYUk",
+  1108: { id: "1027",
     upsells: [
       { field: "food",            label: "Food" },
       { field: "campinggear",     label: "Camping Gear" },
@@ -779,7 +779,7 @@ const DETAIL_APIS = {
     ]
   },
   // Packraft Trail Balkan 2025
-  1113: { id: "1028", key: "TCTzEFxLAc2cLlyKEGwwrxG2yZlLGQ-o",
+  1113: { id: "1028",
     upsells: [
       { field: "food",            label: "Food" },
       { field: "campinggear",     label: "Camping Gear" },
@@ -981,7 +981,7 @@ async function fetchAll() {
   // Fetch detailed APIs in parallel (non-blocking — dashboard works without them)
   const detailEntries = Object.entries(DETAIL_APIS);
   const detailResults = await Promise.all(
-    detailEntries.map(([pid, q]) => fetchJSON({ id: q.id, key: q.key }).catch(() => []))
+    detailEntries.map(([pid, q]) => fetchJSON({ id: q.id }).catch(() => []))
   );
   detailData = {};
   detailEntries.forEach(([pid], i) => { detailData[pid] = detailResults[i]; });

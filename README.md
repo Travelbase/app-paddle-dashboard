@@ -13,8 +13,8 @@
 A single self-contained `dashboard.html` (vanilla JS + [Chart.js](https://www.chartjs.org/))
 visualises the paddle/canoe trips. It pulls its data at runtime from the legacy Travelbase
 **export API** (`admin.travelbase.eu/task/export`) through a same-origin proxy in `serve.js`, so the
-browser never makes a cross-origin call and no API keys are exposed beyond the public report
-`id`/`key` pairs already embedded in the page.
+browser never makes a cross-origin call. The browser sends only a report `id`; the proxy attaches the
+matching export key (kept server-side in Secret Manager) — no keys are exposed to the client.
 
 There is no build step and no framework — `serve.js` is a ~120-line Node static server using only
 built-in modules.
@@ -30,13 +30,16 @@ BASE_PATH=/a/paddle-dashboard PORT=8080 node serve.js
 # → http://localhost:8080/a/paddle-dashboard/
 ```
 
-No environment variables or secrets are required. Optional overrides:
+Environment variables:
 
-| Var          | Default                 | Purpose                                            |
-|--------------|-------------------------|----------------------------------------------------|
-| `PORT`       | `8080`                  | Listen port (Cloud Run sets this).                 |
-| `BASE_PATH`  | `/` (local), `/a/paddle-dashboard/` (Docker) | Sub-path the app is mounted under; stripped before routing. |
-| `EXPORT_HOST`| `admin.travelbase.eu`   | Upstream export API host (proxy target).           |
+| Var           | Default                 | Purpose                                            |
+|---------------|-------------------------|----------------------------------------------------|
+| `EXPORT_KEYS` | `{}`                    | JSON map of report `id` → export key; the proxy attaches the key for the requested report. In prod, mounted from Secret Manager (`paddle-dashboard-export-keys`). For local data: `export EXPORT_KEYS="$(gcloud secrets versions access latest --secret paddle-dashboard-export-keys --project travelbase-apps)"`. |
+| `PORT`        | `8080`                  | Listen port (Cloud Run sets this).                 |
+| `BASE_PATH`   | `/` (local), `/a/paddle-dashboard/` (Docker) | Sub-path the app is mounted under; stripped before routing. |
+| `EXPORT_HOST` | `admin.travelbase.eu`   | Upstream export API host (proxy target).           |
+
+Without `EXPORT_KEYS` the page loads but data calls return `400 unknown report id`.
 
 ## Deployment
 
