@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Team Paddle Dashboard</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
   :root {
@@ -189,30 +190,24 @@
   .persona-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 20px; }
   @media (max-width: 900px) { .persona-grid { grid-template-columns: 1fr; } }
   .persona-card {
-    position: relative; border-radius: 16px; padding: 28px 24px 24px;
+    position: relative; border-radius: 12px; padding: 20px;
     display: flex; align-items: flex-start; gap: 20px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    transition: transform 0.3s cubic-bezier(.4,0,.2,1), box-shadow 0.3s cubic-bezier(.4,0,.2,1);
+    background: rgba(0,0,0,0.04);
+    transition: background 0.2s;
     overflow: hidden;
   }
-  .persona-card::before {
-    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--accent), #8b5cf6); opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  .persona-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.12); }
-  .persona-card:hover::before { opacity: 1; }
+  [data-theme="dark"] .persona-card { background: rgba(255,255,255,0.04); }
+  .persona-card:hover { background: rgba(0,0,0,0.07); }
+  [data-theme="dark"] .persona-card:hover { background: rgba(255,255,255,0.07); }
   .persona-avatar-wrap {
-    width: 90px; height: 90px; border-radius: 50%; flex-shrink: 0;
+    width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
     overflow: hidden; display: flex; align-items: center; justify-content: center;
     background: linear-gradient(135deg, var(--accent), #8b5cf6);
     font-size: 1.6rem; font-weight: 800; color: #fff; letter-spacing: -0.02em;
     box-shadow: 0 4px 16px rgba(139,92,246,0.25);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
-  .persona-card:hover .persona-avatar-wrap { transform: scale(1.05); box-shadow: 0 6px 24px rgba(139,92,246,0.35); }
+  .persona-card:hover .persona-avatar-wrap { transform: scale(1.03); }
   .persona-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
   .persona-info { flex: 1; min-width: 0; }
   .persona-name { font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 2px; letter-spacing: -0.01em; }
@@ -228,10 +223,41 @@
     background: var(--bg); color: var(--text-muted);
     border: 1px solid var(--border); transition: border-color 0.2s ease;
   }
-  .persona-card:hover .persona-tag { border-color: var(--accent); }
+  .persona-card:hover .persona-tag { border-color: var(--accent); color: var(--text); }
   .persona-quote {
     font-size: 0.8rem; font-style: italic; color: var(--text-muted);
     line-height: 1.5; position: relative; padding-left: 14px;
+  }
+  .persona-tabs {
+    display: flex; gap: 6px; align-items: flex-end;
+    border-bottom: 1px solid var(--border);
+    position: relative; z-index: 2;
+  }
+  .persona-tab {
+    padding: 7px 26px 10px; border-radius: 12px 12px 0 0;
+    border: 1px solid var(--border); border-bottom: none;
+    font-size: 0.8rem; font-weight: 700; cursor: pointer;
+    background: var(--bg); color: var(--text-muted);
+    position: relative; top: 4px;
+    opacity: 0.55;
+    transition: color 0.2s, background 0.2s, opacity 0.2s, top 0.2s;
+  }
+  .persona-tab:hover:not(.active) { opacity: 0.8; color: var(--text); }
+  .persona-tab.active {
+    background: var(--bg-card);
+    color: var(--tab-color, var(--accent));
+    border-top: 4px solid var(--tab-color, var(--accent));
+    padding: 10px 26px 11px;
+    top: 1px; margin-bottom: -1px;
+    opacity: 1;
+    z-index: 3;
+    box-shadow: -3px -4px 8px rgba(0,0,0,0.07), 3px -4px 8px rgba(0,0,0,0.05);
+  }
+  .persona-folder-body {
+    background: var(--bg-card);
+    border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 20px; position: relative; z-index: 1;
   }
   .persona-quote::before {
     content: "\201C"; position: absolute; left: -2px; top: -6px;
@@ -260,7 +286,21 @@
   .table-card .table-body {
     max-height: 5000px; overflow: hidden; overflow: clip;
     transition: max-height 0.4s ease-in-out, opacity 0.3s ease, margin-top 0.3s ease;
-    opacity: 1; margin-top: 12px; padding: 8px 12px; border-radius: var(--radius);
+    opacity: 1; margin-top: 4px; padding: 12px 16px; border-radius: var(--radius);
+  }
+  /* Cards nested inside a table-card sit in a clipping container, so the full
+     neumorphic shadow would be sliced off at the edges. Use a compact one. */
+  .table-card .scorecard, .table-card .chart-card {
+    box-shadow: 4px 4px 12px rgba(0,0,0,0.08), -4px -4px 12px rgba(255,255,255,0.6);
+  }
+  .table-card .scorecard:hover, .table-card .chart-card:hover {
+    transform: none; box-shadow: 5px 5px 14px rgba(0,0,0,0.10), -5px -5px 14px rgba(255,255,255,0.7);
+  }
+  [data-theme="dark"] .table-card .scorecard, [data-theme="dark"] .table-card .chart-card {
+    box-shadow: 4px 4px 12px rgba(0,0,0,0.35), -4px -4px 12px rgba(255,255,255,0.03);
+  }
+  [data-theme="dark"] .table-card .scorecard:hover, [data-theme="dark"] .table-card .chart-card:hover {
+    box-shadow: 5px 5px 14px rgba(0,0,0,0.4), -5px -5px 14px rgba(255,255,255,0.04);
   }
   .table-card.collapsed h3 { margin-bottom: 0; }
   .table-card.collapsed h3::after { transform: rotate(-45deg); }
@@ -571,7 +611,7 @@ const PROXY_URL = "api/export";
 // Single unified query — all trips in one call
 const UNIFIED_QUERY = { id: "999" };
 const WEBSTATS_QUERY = { id: "715" };
-const LEADS_QUERY = { id: "1023" };
+const LEADS_QUERY = { id: "1085" };
 
 // Detailed per-trip APIs (for transport, team_size, gender, etc.)
 const DETAIL_APIS = {
@@ -878,11 +918,13 @@ let filterLang = "all";
 let charts = {};
 let lastRefreshed = null;
 let recentPeriod = "day"; // "day", "week", "month"
+let leadsPeriod = "day";
 let tableCollapsed = true;
 let weeklyCollapsed = true;
 let profileCollapsed = true;
 let bookingDetailsCollapsed = true;
 let personasCollapsed = true;
+let activePersonaTab = null;
 let leadsCollapsed = true;
 let webVisits = [];
 let detailData = {}; // project_id → array of detail rows
@@ -976,7 +1018,8 @@ async function fetchAll() {
   ]);
   allData = main;
   webVisits = visits;
-  leadsData = leads;
+  const PADDLE_BRANDS = new Set(["TCT","CT","TKT","PRT","FRIES"]);
+  leadsData = leads.filter(r => PADDLE_BRANDS.has(r.brand));
 
   // Fetch detailed APIs in parallel (non-blocking — dashboard works without them)
   const detailEntries = Object.entries(DETAIL_APIS);
@@ -1031,7 +1074,7 @@ function buildFilters() {
   const el = document.getElementById("filter-bar");
 
   // Gather unique years and trip names from data, sorted by participant count
-  const years = [...new Set(allData.map(getTripYear).filter(Boolean))].sort();
+  const years = [...new Set([...allData.map(getTripYear).filter(Boolean), 2027])].sort();
   const tripCounts = {};
   for (const r of allData) { const t = getTripBase(r); tripCounts[t] = (tripCounts[t] || 0) + 1; }
   // Ensure all group member trips have buttons even without data
@@ -1474,36 +1517,73 @@ function updatePersonas() {
   const el = document.getElementById("persona-section");
   if (!el) return;
 
-  // Find which trip is selected (single trip only)
-  const selectedTrips = [...filterTrips];
-  if (selectedTrips.length !== 1) { el.innerHTML = ""; return; }
-  const trip = selectedTrips[0];
+  const TAB_LABELS = {
+    "The Canoe Trip Classic":      "Canoe Classic",
+    "The Canoe Trip Short":        "Canoe Short",
+    "The Kayak Trip":              "Kayak",
+    "Canoe Tribe Classic":         "Tribe Classic",
+    "Canoe Tribe Short":           "Tribe Short",
+    "The Packraft Trail Slovenia":   "Slovenia",
+    "The Packraft Trail Semoy":     "Semoy",
+    "The Packraft Trail Mullerthal":"Mullerthal",
+    "The Packraft Trail Biesbosch": "Biesbosch",
+    "The Packraft Trail Bavaria":   "Bavaria",
+    "The Canoe Trip Friesland":     "Friesland",
+  };
 
-  let personas = PERSONAS[trip];
-  if (typeof personas === "string") personas = PERSONAS[personas]; // alias
-  if (!personas || !personas.length) { el.innerHTML = ""; return; }
+  // Determine candidate trips: group > custom selection > all
+  let trips = [];
+  if (filterGroup !== "all") {
+    trips = (TRIP_GROUPS[filterGroup] || []).filter(t => PERSONAS[t]?.length);
+  } else if (filterTrips.size > 0) {
+    trips = [...filterTrips].filter(t => PERSONAS[t]?.length);
+  } else {
+    trips = Object.keys(PERSONAS).filter(t => PERSONAS[t]?.length);
+  }
+  if (!trips.length) { el.innerHTML = ""; return; }
+
+  // Keep active tab valid
+  if (!activePersonaTab || !trips.includes(activePersonaTab)) activePersonaTab = trips[0];
+
+  const personas = PERSONAS[activePersonaTab];
+  if (!personas?.length) { el.innerHTML = ""; return; }
+
+  const showTabs = trips.length > 1 || filterGroup !== "all";
 
   el.innerHTML = `
     <div class="table-card ${personasCollapsed ? "collapsed" : ""}" id="personas-card">
       <h3 onclick="personasCollapsed=!personasCollapsed;document.getElementById('personas-card').classList.toggle('collapsed')">Marketing Personas (2025 data)</h3>
       <div class="table-body">
-    <div class="persona-grid">
-      ${personas.map(p => `
-        <div class="persona-card">
-          <div class="persona-avatar-wrap">
-            <img src="${p.img}" alt="${p.name}" onload="this.parentNode.style.fontSize='0'" onerror="this.remove()">
-            ${p.name.split(" ").map(w => w[0]).join("").slice(0,2)}
+        ${showTabs ? `
+          <div class="persona-tabs">
+            ${trips.map(t => `
+              <button class="persona-tab ${t === activePersonaTab ? "active" : ""}"
+                style="--tab-color:${TRIP_COLORS[t] || "var(--accent)"}"
+                onclick="activePersonaTab='${t.replace(/'/g,"\\'")}';updatePersonas()">
+                ${TAB_LABELS[t] || t}
+              </button>
+            `).join("")}
           </div>
-          <div class="persona-info">
-            <div class="persona-name">${p.name}</div>
-            <div class="persona-tagline">${p.tagline}</div>
-            <div class="persona-stats">${p.stats}</div>
-            <div class="persona-tags">${p.tags.map(t => `<span class="persona-tag">${t}</span>`).join("")}</div>
-            <div class="persona-quote">${p.quote}</div>
-          </div>
+        ` : ""}
+        <div class="persona-folder-body">
+        <div class="persona-grid">
+          ${personas.map(p => `
+            <div class="persona-card">
+              <div class="persona-avatar-wrap">
+                <img src="${p.img}" alt="${p.name}" onload="this.parentNode.style.fontSize='0'" onerror="this.remove()">
+                ${p.name.split(" ").map(w => w[0]).join("").slice(0,2)}
+              </div>
+              <div class="persona-info">
+                <div class="persona-name">${p.name}</div>
+                <div class="persona-tagline">${p.tagline}</div>
+                <div class="persona-stats">${p.stats}</div>
+                <div class="persona-tags">${p.tags.map(t => `<span class="persona-tag">${t}</span>`).join("")}</div>
+                <div class="persona-quote">${p.quote}</div>
+              </div>
+            </div>
+          `).join("")}
         </div>
-      `).join("")}
-    </div>
+        </div>
       </div>
     </div>
   `;
@@ -1511,18 +1591,39 @@ function updatePersonas() {
 
 // ─── LEADS SECTION ────────────────────────────────────────────────
 const LEAD_BRAND_MAP = {
-  "TCT": ["The Canoe Trip Classic", "The Canoe Trip Short"],
-  "CT": ["Canoe Tribe Classic", "Canoe Tribe Short"],
-  "TKT": ["The Kayak Trip"],
-  "PRT": ["The Packraft Trail Semoy", "The Packraft Trail Mullerthal", "The Packraft Trail Biesbosch", "The Packraft Trail Ardennes", "The Packraft Trail Bretagne", "The Packraft Trail Bavaria"],
+  "TCT":     ["The Canoe Trip Classic", "The Canoe Trip Short"],
+  "CT":      ["Canoe Tribe Classic", "Canoe Tribe Short"],
+  "TKT":     ["The Kayak Trip"],
+  "PRT":     ["The Packraft Trail Semoy", "The Packraft Trail Mullerthal", "The Packraft Trail Biesbosch", "The Packraft Trail Ardennes", "The Packraft Trail Bretagne", "The Packraft Trail Bavaria"],
   "PRTSLOV": ["The Packraft Trail Slovenia"],
-  "FRIES": ["The Canoe Trip Friesland"],
+  "FRIES":   ["The Canoe Trip Friesland"],
 };
+
+function getLeadYear(r) {
+  const m = (r.typeform || "").match(/(\d{2})/);
+  if (m) return 2000 + parseInt(m[1]);
+  return r.date ? parseInt(r.date.slice(0, 4)) : null;
+}
+
+function effectiveBrand(r) {
+  const tf = (r.typeform || "").toLowerCase();
+  if (tf.includes("fries")) return "FRIES";
+  if (r.brand === "PRT" && (r.project || "").toLowerCase().includes("slov")) return "PRTSLOV";
+  return r.brand;
+}
+
+function effectiveAction(r) {
+  const tf = (r.typeform || "").toLowerCase();
+  if (tf.includes("concours") || tf.includes("contest")) return "competition";
+  if (tf.includes("winaction") || tf.includes("win_action") || tf.includes("win action")) return "competition";
+  if (r.lead_action === "download") return "magazine";
+  return r.lead_action;
+}
 
 function getFilteredLeads() {
   return leadsData.filter(r => {
     // Brand/trip filter
-    const trips = LEAD_BRAND_MAP[r.brand] || [];
+    const trips = LEAD_BRAND_MAP[effectiveBrand(r)] || [];
     if (filterTrips.size > 0 && !trips.some(t => filterTrips.has(t))) return false;
     if (filterGroup !== "all") {
       const groupTrips = TRIP_GROUPS[filterGroup];
@@ -1536,6 +1637,66 @@ function getFilteredLeads() {
     }
     return true;
   });
+}
+
+function renderPreregTracker() {
+  const el = document.getElementById("prereg-tracker-inline");
+  if (!el) return;
+
+  const targets = [
+    { brand: "TCT",     label: "The Canoe Trip",   color: "#3C6C54", target: 3200 },
+    { brand: "CT",      label: "Canoe Tribe",       color: "#3E7664", target: 550  },
+    { brand: "TKT",     label: "The Kayak Trip",    color: "#1D769C", target: 350  },
+    { brand: "PRT",     label: "Packraft Micro's",  color: "#356968", target: 4500 },
+    { brand: "PRTSLOV", label: "Packraft Slovenia", color: "#c49a2c", target: 800  },
+  ];
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const collectionStart = new Date("2026-11-11"); collectionStart.setHours(0, 0, 0, 0);
+  const daysUntilOpen = Math.round((collectionStart - now) / 86400000);
+  const collectionOpen = daysUntilOpen <= 0;
+
+  const preregs = {};
+  leadsData.forEach(r => {
+    if (getLeadYear(r) !== 2027) return;
+    if (effectiveAction(r) !== "preregistration") return;
+    const b = effectiveBrand(r);
+    preregs[b] = (preregs[b] || 0) + 1;
+  });
+
+  el.innerHTML = `
+    <div style="margin:24px 0;padding:20px;border:1px solid var(--border);border-radius:var(--radius);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div style="font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);">Pre-Registration Tracker '27</div>
+        ${!collectionOpen ? `<div style="font-size:0.68rem;font-weight:600;color:#c49a2c;background:rgba(196,154,44,0.12);border:1px solid rgba(196,154,44,0.3);border-radius:20px;padding:4px 12px;">Preregs can book ${collectionStart.toLocaleDateString("en",{day:"numeric",month:"short"})}</div>` : ""}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        ${targets.map(t => {
+          const count = preregs[t.brand] || 0;
+          const pct = Math.min(100, Math.round(count / t.target * 100));
+          const started = count > 0;
+          const statusText = started
+            ? `${pct}% of target`
+            : collectionOpen ? "No preregs yet" : `Opens in ${daysUntilOpen} days`;
+          return `<div style="display:flex;align-items:center;gap:16px;padding:14px 18px;background:var(--bg);border-radius:12px;border:1px solid var(--border);border-left:4px solid ${started ? t.color : 'var(--border)'};">
+            <div style="flex:0 0 160px;">
+              <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.04em;color:${started ? t.color : 'var(--text-muted)'};text-transform:uppercase;">${t.label}</div>
+            </div>
+            <div style="flex:0 0 60px;text-align:right;">
+              <span style="font-size:1.4rem;font-weight:800;color:${started ? 'var(--text)' : 'var(--text-muted)'};">${count.toLocaleString()}</span>
+            </div>
+            <div style="flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${started ? t.color : 'var(--border)'};border-radius:4px;transition:width 0.6s ease;${started ? `box-shadow:0 0 8px ${t.color}60;` : ''}"></div>
+            </div>
+            <div style="flex:0 0 100px;text-align:right;font-size:0.75rem;color:var(--text-muted);">
+              <span style="color:${started ? t.color : 'var(--text-muted)'};">${statusText}</span>
+            </div>
+            <div style="flex:0 0 70px;text-align:right;font-size:0.75rem;color:var(--text-muted);">
+              / ${t.target.toLocaleString()}
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`;
 }
 
 function updateLeads() {
@@ -1554,32 +1715,39 @@ function updateLeads() {
   const curYear = filterYear;
   const prevYear = getPrevYear();
 
-  // Extract year from typeform name (e.g. "TCT26_NL_PREREG" → 2026)
-  function getLeadYear(r) {
-    const m = (r.typeform || "").match(/(\d{2})/);
-    return m ? 2000 + parseInt(m[1]) : null;
-  }
 
-  // Split by year based on typeform name, not submission date
   const curLeads = leads.filter(r => getLeadYear(r) === curYear);
   const prevLeads = leads.filter(r => getLeadYear(r) === prevYear);
 
   // 1. Total leads scorecard
   const totalCur = curLeads.length;
   const totalPrev = prevLeads.length;
-  const yoyPct = totalPrev ? ((totalCur - totalPrev) / totalPrev * 100).toFixed(0) : "–";
-  const yoyClass = totalCur >= totalPrev ? "yoy-pos" : "yoy-neg";
+
+  // Prereg-only comparison at the same point in each season. Prev-season dates are
+  // shifted forward a year first: a season's preregs are collected in the calendar
+  // year before it, so raw dates are never directly comparable.
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const leadYearShift = curYear - prevYear;
+  const preregTotalCur = curLeads.filter(r => effectiveAction(r) === "preregistration" && (!r.date || r.date <= todayStr)).length;
+  const preregTotalPrev = prevLeads.filter(r => {
+    if (effectiveAction(r) !== "preregistration" || !r.date) return false;
+    const d = new Date(r.date);
+    d.setFullYear(d.getFullYear() + leadYearShift);
+    return d.toISOString().slice(0, 10) <= todayStr;
+  }).length;
+  const yoyPct = preregTotalPrev ? ((preregTotalCur - preregTotalPrev) / preregTotalPrev * 100).toFixed(0) : "–";
+  const yoyClass = preregTotalCur >= preregTotalPrev ? "yoy-pos" : "yoy-neg";
 
   // 2. Leads by action
   const actionsCur = {};
-  curLeads.forEach(r => { actionsCur[r.lead_action] = (actionsCur[r.lead_action] || 0) + 1; });
+  curLeads.forEach(r => { const a = effectiveAction(r); actionsCur[a] = (actionsCur[a] || 0) + 1; });
   const actionsPrev = {};
-  prevLeads.forEach(r => { actionsPrev[r.lead_action] = (actionsPrev[r.lead_action] || 0) + 1; });
+  prevLeads.forEach(r => { const a = effectiveAction(r); actionsPrev[a] = (actionsPrev[a] || 0) + 1; });
   const allActions = [...new Set([...Object.keys(actionsCur), ...Object.keys(actionsPrev)])].sort((a, b) => (actionsCur[b] || 0) - (actionsCur[a] || 0));
 
   // 3. Leads by brand
   const brandsCur = {};
-  curLeads.forEach(r => { brandsCur[r.brand] = (brandsCur[r.brand] || 0) + 1; });
+  curLeads.forEach(r => { const b = effectiveBrand(r); brandsCur[b] = (brandsCur[b] || 0) + 1; });
 
   // 4. Leads by language
   const langsCur = {};
@@ -1587,16 +1755,16 @@ function updateLeads() {
 
   // 5. (Conversion rate removed — no personal data in leads to match)
 
-  // 6. Recent leads (today, yesterday, 7d, 30d) + daily chart for last 30 days
+  // 6. Recent leads (togglable) + daily chart for last 30 days
   const today = new Date().toISOString().slice(0, 10);
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   const d7ago = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
   const d30ago = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-  const allLeads = leads; // all filtered leads (both years)
-  const leadsToday = allLeads.filter(r => r.date === today).length;
-  const leadsYesterday = allLeads.filter(r => r.date === yesterday).length;
-  const leads7d = allLeads.filter(r => r.date >= d7ago).length;
-  const leads30d = allLeads.filter(r => r.date >= d30ago).length;
+  const leadsRecent = leadsPeriod === "day" ? curLeads.filter(r => r.date === today).length
+    : leadsPeriod === "yesterday" ? curLeads.filter(r => r.date === yesterday).length
+    : leadsPeriod === "week" ? curLeads.filter(r => r.date >= d7ago).length
+    : curLeads.filter(r => r.date >= d30ago).length;
+  const leadsRecentLabel = leadsPeriod === "day" ? "today" : leadsPeriod === "yesterday" ? "yesterday" : leadsPeriod === "week" ? "last 7 days" : "last 30 days";
 
   // Daily counts for last 30 days
   const dailyCounts = {};
@@ -1604,13 +1772,13 @@ function updateLeads() {
     const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
     dailyCounts[d] = 0;
   }
-  allLeads.forEach(r => { if (r.date && r.date in dailyCounts) dailyCounts[r.date]++; });
+  curLeads.forEach(r => { if (r.date && r.date in dailyCounts) dailyCounts[r.date]++; });
   const dailyLabels = Object.keys(dailyCounts);
   const dailyValues = Object.values(dailyCounts);
 
   // Action icons
-  const actionIcons = { preregistration: "📝", interest: "💡", magazine: "📖", waitinglist: "⏳", webinar: "🎓", download: "📥" };
-  const actionLabels = { preregistration: "Pre-registrations", interest: "Interest", magazine: "Magazine", waitinglist: "Waiting List", webinar: "Webinar", download: "Downloads" };
+  const actionIcons = { preregistration: "📝", interest: "💡", magazine: "📖", waitinglist: "⏳", webinar: "🎓", download: "📥", competition: "🏆", abandoned: "👋", quote: "💬", review: "⭐", offerte: "📋" };
+  const actionLabels = { preregistration: "Pre-registrations", interest: "Interest", magazine: "Magazine", waitinglist: "Waiting List", webinar: "Webinar", download: "Downloads", competition: "Contest", abandoned: "Abandoned", quote: "Quote", review: "Review", offerte: "Offerte" };
 
   // 7. Leads per brand
   const brandLabels = { TCT: "The Canoe Trip", CT: "Canoe Tribe", TKT: "The Kayak Trip", PRT: "Packraft Micro's", PRTSLOV: "The Packraft Trail Slovenia", FRIES: "Friesland" };
@@ -1618,17 +1786,17 @@ function updateLeads() {
 
   const prevYearShort = String(prevYear).slice(2);
   const curYearShort = String(curYear).slice(2);
-  const yoyText = yoyPct !== "–" ? (yoyPct > 0 ? "+" : "") + yoyPct + "% vs '" + prevYearShort : "";
+  const cutoffLabel = new Date(todayStr).toLocaleDateString("en", { day: "numeric", month: "short" });
+  const yoyText = yoyPct !== "–"
+    ? (yoyPct > 0 ? "+" : "") + yoyPct + "% preregs vs '" + prevYearShort + " (to " + cutoffLabel + ")"
+    : "";
 
   el.innerHTML = `
     <div class="table-card" id="leads-card">
       <h3 onclick="leadsCollapsed=!leadsCollapsed;updateLeads()">Leads</h3>
       <div class="table-body">
-        <div class="scorecards" style="grid-template-columns:repeat(6,1fr);margin-bottom:20px;margin-top:24px;">
-          <div class="scorecard" style="border-left-color:var(--scorecard-1);"><div class="scorecard-label">Today</div><div class="scorecard-value">${leadsToday}</div></div>
-          <div class="scorecard" style="border-left-color:var(--scorecard-2);"><div class="scorecard-label">Yesterday</div><div class="scorecard-value">${leadsYesterday}</div></div>
-          <div class="scorecard" style="border-left-color:var(--scorecard-3);"><div class="scorecard-label">7 Days</div><div class="scorecard-value">${leads7d}</div></div>
-          <div class="scorecard" style="border-left-color:var(--scorecard-4);"><div class="scorecard-label">30 Days</div><div class="scorecard-value">${leads30d}</div></div>
+        <div class="scorecards" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+          <div class="scorecard" style="border-left-color:var(--scorecard-1);"><div class="scorecard-label">New Leads <span class="sc-toggle" id="leads-period-toggle"><button data-p="yesterday">Y</button><button data-p="day">D</button><button data-p="week">W</button><button data-p="month">M</button></span></div><div class="scorecard-value" id="leads-recent-val">${leadsRecent}</div><div class="scorecard-sub" id="leads-recent-sub">${leadsRecentLabel}</div></div>
           <div class="scorecard" style="border-left-color:var(--scorecard-1);"><div class="scorecard-label">Total '${curYearShort}</div><div class="scorecard-value">${totalCur.toLocaleString()}</div><div class="scorecard-sub"><span class="${yoyClass}">${yoyText}</span></div></div>
           <div class="scorecard" style="border-left-color:var(--scorecard-2);"><div class="scorecard-label">Language Split</div><div class="scorecard-value" style="font-size:0.85rem;line-height:1.6;">${["NL","FR","DE","EN"].map(l => {
             const c = langsCur[l] || 0;
@@ -1640,10 +1808,19 @@ function updateLeads() {
         <div class="scorecard-label" style="margin-top:20px;">Leads — Last 30 Days</div>
         <div class="chart-wrapper" style="height:220px;margin-top:8px;"><canvas id="ch-leads-daily"></canvas></div>
 
-        <div class="scorecard-label" style="margin-top:20px;">Total Leads '${String(curYear).slice(2)} vs '${String(prevYear).slice(2)}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;">
+          <div class="scorecard-label">Total Leads '${String(curYear).slice(2)} vs '${String(prevYear).slice(2)}</div>
+          ${curYear === 2027 ? `<div style="display:flex;gap:12px;font-size:0.68rem;color:var(--text-muted);">
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#7c3aed;margin-right:4px;"></span>Website launch — 28 Oct</span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#7c3aed;margin-right:4px;"></span>Preregs book — 11 Nov</span>
+            <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#7c3aed;margin-right:4px;"></span>Bookings open — 12 Nov</span>
+          </div>` : ""}
+        </div>
         <div class="chart-wrapper" style="height:280px;margin-top:8px;"><canvas id="ch-leads-cumulative"></canvas></div>
 
-        <div style="overflow-x:auto;margin-top:20px;">
+        ${curYear === 2027 ? `<div id="prereg-tracker-inline"></div>` : ""}
+
+        <div style="margin-top:20px;">
           <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
             <thead>
               <tr style="border-bottom:2px solid var(--border);text-align:left;">
@@ -1657,24 +1834,45 @@ function updateLeads() {
               </tr>
             </thead>
             <tbody>
-              ${Object.entries(brandsCur).sort((a, b) => b[1] - a[1]).map(([brand, total]) => {
-                const brandLeads = curLeads.filter(r => r.brand === brand);
-                const perAction = {};
-                brandLeads.forEach(r => { perAction[r.lead_action] = (perAction[r.lead_action] || 0) + 1; });
-                return `<tr style="border-bottom:1px solid var(--border);">
-                  <td style="padding:8px 12px;font-weight:600;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${brandColor[brand] || 'var(--accent)'};margin-right:6px;"></span>${brandLabels[brand] || brand}</td>
-                  ${allActions.map(a => `<td style="padding:8px 6px;text-align:center;color:${perAction[a] ? 'var(--text)' : 'var(--text-muted)'};">${perAction[a] || "–"}</td>`).join("")}
-                  <td style="padding:8px 6px;text-align:center;font-weight:700;">${total}</td>
-                  ${["nl","fr","de","en"].map(l => {
-                    const c = brandLeads.filter(r => (r.language||"").toLowerCase() === l).length;
-                    return `<td style="padding:8px 6px;text-align:center;color:${c ? 'var(--text)' : 'var(--text-muted)'};">${c || "–"}</td>`;
-                  }).join("")}
-                </tr>`;
-              }).join("")}
+              ${(() => {
+                const PRT_DEST = { slov:"Slovenia", bb:"Biesbosch", mul:"Mullerthal", mull:"Mullerthal", semoy:"Semoy", ard:"Ardennes", bzh:"Bretagne", bav:"Bavaria", bal:"Balkan", aus:"Austria" };
+                function getPRTDest(r) {
+                  const p = (r.project||"").toLowerCase();
+                  for (const [k,v] of Object.entries(PRT_DEST)) { if (p.includes(k)) return v; }
+                  return null;
+                }
+                const langTip = (leads) => ["NL","FR","DE","EN"].map(l => { const c = leads.filter(r => (r.language||"").toUpperCase() === l).length; return c ? l + ": " + c : null; }).filter(Boolean).join("\n") || "";
+                return Object.entries(brandsCur).sort((a, b) => b[1] - a[1]).map(([brand, total]) => {
+                  const brandLeads = curLeads.filter(r => effectiveBrand(r) === brand);
+                  const perAction = {};
+                  brandLeads.forEach(r => { const a = effectiveAction(r); perAction[a] = (perAction[a] || 0) + 1; });
+                  const mainRow = `<tr style="border-bottom:${brand === 'PRT' ? 'none' : '1px solid var(--border)'};">
+                    <td style="padding:8px 12px;font-weight:600;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${brandColor[brand] || 'var(--accent)'};margin-right:6px;"></span>${brandLabels[brand] || brand}</td>
+                    ${allActions.map(a => { const count = perAction[a]; const tip = count ? langTip(brandLeads.filter(r => effectiveAction(r) === a)) : ""; return `<td style="padding:8px 6px;text-align:center;color:${count ? 'var(--text)' : 'var(--text-muted)'};" ${tip ? 'data-tip="'+tip+'"' : ''}>${count || "–"}</td>`; }).join("")}
+                    <td style="padding:8px 6px;text-align:center;font-weight:700;" data-tip="${langTip(brandLeads)}">${total}</td>
+                    ${["nl","fr","de","en"].map(l => { const c = brandLeads.filter(r => (r.language||"").toLowerCase() === l).length; return `<td style="padding:8px 6px;text-align:center;color:${c ? 'var(--text)' : 'var(--text-muted)'};">${c || "–"}</td>`; }).join("")}
+                  </tr>`;
+                  if (brand !== 'PRT') return mainRow;
+                  // PRT sub-rows per destination
+                  const destMap = {};
+                  brandLeads.forEach(r => { const dest = getPRTDest(r); if (dest) { if (!destMap[dest]) destMap[dest] = []; destMap[dest].push(r); } });
+                  const subRows = Object.entries(destMap).sort((a,b) => b[1].length - a[1].length).map(([dest, dl]) => {
+                    const dp = {};
+                    dl.forEach(r => { const a = effectiveAction(r); dp[a] = (dp[a]||0)+1; });
+                    return `<tr style="border-bottom:1px solid var(--border);background:rgba(0,0,0,0.015);">
+                      <td style="padding:5px 12px 5px 28px;font-size:0.75rem;color:var(--text-muted);">↳ ${dest}</td>
+                      ${allActions.map(a => { const count = dp[a]; const tip = count ? langTip(dl.filter(r => effectiveAction(r)===a)) : ""; return `<td style="padding:5px 6px;text-align:center;font-size:0.75rem;color:${count?'var(--text)':'var(--text-muted)'};" ${tip?'data-tip="'+tip+'"':''}>${count||"–"}</td>`; }).join("")}
+                      <td style="padding:5px 6px;text-align:center;font-size:0.75rem;font-weight:600;" data-tip="${langTip(dl)}">${dl.length}</td>
+                      ${["nl","fr","de","en"].map(l => { const c=dl.filter(r=>(r.language||"").toLowerCase()===l).length; return `<td style="padding:5px 6px;text-align:center;font-size:0.75rem;color:${c?'var(--text)':'var(--text-muted)'};">${c||"–"}</td>`; }).join("")}
+                    </tr>`;
+                  }).join("");
+                  return mainRow + subRows;
+                }).join("");
+              })()}
               <tr style="border-top:2px solid var(--border);font-weight:700;">
                 <td style="padding:8px 12px;">Total</td>
-                ${allActions.map(a => `<td style="padding:8px 6px;text-align:center;">${actionsCur[a] || 0}</td>`).join("")}
-                <td style="padding:8px 6px;text-align:center;">${totalCur}</td>
+                ${allActions.map(a => { const count = actionsCur[a] || 0; const tip = count ? ["NL","FR","DE","EN"].map(l => { const c = curLeads.filter(r => effectiveAction(r) === a && (r.language||"").toUpperCase() === l).length; return c ? l+": "+c : null; }).filter(Boolean).join("\n") : ""; return `<td style="padding:8px 6px;text-align:center;" ${tip ? 'data-tip="'+tip+'"' : ''}>${count || 0}</td>`; }).join("")}
+                <td style="padding:8px 6px;text-align:center;" data-tip="${["NL","FR","DE","EN"].map(l => { const c = curLeads.filter(r => (r.language||"").toUpperCase() === l).length; return c ? l+": "+c : null; }).filter(Boolean).join("\n")}">${totalCur}</td>
                 ${["nl","fr","de","en"].map(l => {
                   const c = curLeads.filter(r => (r.language||"").toLowerCase() === l).length;
                   return `<td style="padding:8px 6px;text-align:center;">${c}</td>`;
@@ -1686,6 +1884,20 @@ function updateLeads() {
       </div>
     </div>
   `;
+
+  renderPreregTracker();
+
+  // Wire up leads period toggle
+  const _lpt = document.getElementById("leads-period-toggle");
+  if (_lpt) {
+    _lpt.querySelectorAll("button").forEach(btn => {
+      if (btn.dataset.p === leadsPeriod) btn.classList.add("active");
+      btn.addEventListener("click", () => {
+        leadsPeriod = btn.dataset.p;
+        updateLeads();
+      });
+    });
+  }
 
   const textColor = getComputedStyle(document.documentElement).getPropertyValue("--text").trim();
 
@@ -1751,6 +1963,45 @@ function updateLeads() {
   if (ctxCum) {
     const existing = Chart.getChart(ctxCum);
     if (existing) existing.destroy();
+
+    const milestones = curYear === 2027 ? [
+      { date: "2026-10-28", label: "Website launch", color: "#7c3aed" },
+      { date: "2026-11-11", label: "Preregs book", color: "#7c3aed" },
+      { date: "2026-11-12", label: "Bookings open", color: "#7c3aed" },
+    ] : [];
+    const milestoneIndices = milestones.map(m => ({ ...m, idx: sortedDates.indexOf(m.date) })).filter(m => m.idx >= 0);
+
+    const milestonePlugin = {
+      id: "milestoneLines",
+      afterDraw(chart) {
+        const { ctx, chartArea, scales } = chart;
+        milestoneIndices.forEach((m, i) => {
+          const x = scales.x.getPixelForValue(m.idx);
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(x, chartArea.top);
+          ctx.lineTo(x, chartArea.bottom);
+          ctx.strokeStyle = m.color;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 3]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          // flag at top
+          const flagY = chartArea.top + 2 + (i * 12);
+          ctx.fillStyle = m.color;
+          ctx.fillRect(x, flagY, 10, 6);
+          ctx.beginPath();
+          ctx.moveTo(x, flagY);
+          ctx.lineTo(x, flagY + 14);
+          ctx.strokeStyle = m.color;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([]);
+          ctx.stroke();
+          ctx.restore();
+        });
+      }
+    };
+
     new Chart(ctxCum, {
       type: "line",
       data: {
@@ -1769,7 +2020,9 @@ function updateLeads() {
           x: { ticks: { color: "var(--text-muted)", font: { size: 9 }, maxTicksLimit: 15 }, grid: { display: false } },
           y: { ticks: { color: "var(--text-muted)", font: { size: 10 } }, grid: { color: "rgba(128,128,128,0.1)" }, beginAtZero: true },
         },
+        layout: { padding: { top: 16 } },
       },
+      plugins: milestoneIndices.length ? [milestonePlugin] : [],
     });
   }
 }
@@ -2995,24 +3248,41 @@ function updateTransport() {
 // ─── MARKETING PERSONAS (2025 data) ─────────────────────────────────
 const PERSONAS = {
   "The Canoe Trip Classic": [
-    { name: "Festival Freddy", tagline: "The Belgian Bro", img: "images/canoe-trip-freddy.png",
+    { name: "Festival Freddy", tagline: "The Belgian Bro", img: "images/canoe-classic-freddy.png",
       stats: "🇧🇪 Belgian, 26 · 👥 Group of 4 · 📍 Word-of-mouth",
       tags: ["Bus from Brussels", "Meat foodpack", "Week trip"],
       quote: "Heard about it at a festival, convinced the whole group to join" },
-    { name: "Explorer Emma", tagline: "The German Adventurer", img: "images/canoe-trip-emma.png",
+    { name: "Explorer Emma", tagline: "The German Adventurer", img: "images/canoe-classic-emma.png",
       stats: "🇩🇪 German, 29 · 👥 Duo with partner · 📍 Google",
       tags: ["Selfdrive", "Veggie", "Own gear"],
       quote: "Researched every outdoor trip in Scandinavia — this one had the best reviews" },
-    { name: "Shortbreak Sophie", tagline: "The Dutch Weekend Warrior", img: "images/canoe-trip-sophie.png",
-      stats: "🇳🇱 Dutch, 27 · 👥 Group of 3 · 📍 Instagram",
-      tags: ["Bus from Utrecht", "Short trip", "Camping materials"],
-      quote: "Saw the reel and booked the same day" },
-    { name: "Family François", tagline: "The French-Belgian Dad", img: "images/canoe-trip-francois.png",
-      stats: "🇧🇪 Belgian, 35 · 👨‍👩‍👧‍👦 Family of 4 · 📍 Google",
-      tags: ["Selfdrive", "Standard food", "Tipi"],
-      quote: "Wanted something different from the usual camping holiday" },
+    { name: "Planner Wouter", tagline: "The Dutch Group Organizer", img: "images/canoe-classic-wouter.png",
+      stats: "🇳🇱 Dutch, 28 · 👥 Group of 5 · 📍 Instagram",
+      tags: ["Selfdrive", "Standard food", "Week trip"],
+      quote: "I organized the whole thing in our group chat — someone had to do it" },
+    { name: "Sunrise Florence", tagline: "The Belgian Free Spirit", img: "images/canoe-classic-florence.png",
+      stats: "🇧🇪 Belgian, 31 · 👥 Duo with friend · 📍 Google",
+      tags: ["Bus from Brussels", "Veggie", "Week trip"],
+      quote: "I wanted to wake up to a Swedish lake every morning — and I did" },
   ],
-  "The Canoe Trip Short": "The Canoe Trip Classic",
+  "The Canoe Trip Short": [
+    { name: "Spontaneous Sanne", tagline: "The Dutch Last-Minute Booker", img: "images/canoe-short-sanne.png",
+      stats: "🇳🇱 Dutch, 25 · 👥 Group of 3 · 📍 Instagram",
+      tags: ["Bus from Amsterdam", "Short trip", "Camping gear"],
+      quote: "Saw the reel and booked the same day" },
+    { name: "Deliberate Wim", tagline: "The Belgian Evaluator", img: "images/canoe-short-wim.png",
+      stats: "🇧🇪 Belgian, 30 · 👥 Duo with partner · 📍 Google",
+      tags: ["Selfdrive", "Short trip", "Standard food"],
+      quote: "Checked all the reviews before committing — worth every point" },
+    { name: "Efficient Anna", tagline: "The German Weekend Planner", img: "images/canoe-short-anna.png",
+      stats: "🇩🇪 German, 27 · 👥 Group of 4 · 📍 Google",
+      tags: ["Selfdrive", "Short trip", "Own gear"],
+      quote: "A long weekend is enough if you plan it right" },
+    { name: "Carefree Clément", tagline: "The French-Belgian Fun Seeker", img: "images/canoe-short-clement.png",
+      stats: "🇧🇪 Belgian (FR), 24 · 👥 Group of 6 · 📍 Word-of-mouth",
+      tags: ["Bus from Brussels", "Meat foodpack", "Short trip"],
+      quote: "Just vibes, campfire, and paddling — that's all you need" },
+  ],
   "The Kayak Trip": [
     { name: "Solo Sander", tagline: "The Dutch Solo Adventurer", img: "images/kayak-sander.png",
       stats: "🇳🇱 Dutch, 31 · 🧍 Solo · 📍 Google",
@@ -3032,26 +3302,43 @@ const PERSONAS = {
       quote: "Been following them for years, finally pulled the trigger" },
   ],
   "Canoe Tribe Classic": [
-    { name: "Familie Van den Berg", tagline: "The Dutch Family", img: "images/tribe-vandenberg.png",
+    { name: "Familie Van den Berg", tagline: "The Dutch Family", img: "images/tribe-classic-vandenberg.png",
       stats: "🇳🇱 Dutch · 👨‍👩‍👧‍👦 Family of 4 · 📍 Google",
       tags: ["Week trip", "Camping gear", "Adult + child food"],
       quote: "Looking for an active holiday the whole family enjoys" },
-    { name: "Gezin Janssens", tagline: "The Flemish Family", img: "images/tribe-janssens.png",
-      stats: "🇧🇪 Belgian, NL · 👨‍👩‍👧‍👦 Family of 4 · 📍 Instagram",
-      tags: ["3-day trip", "Child seat", "Own car"],
-      quote: "Tried the 3-day first to see if the kids would like it" },
-    { name: "Adventure Mom Anke", tagline: "The Active Single Parent", img: "images/tribe-anke.png",
+    { name: "Adventure Mom Anke", tagline: "The Active Single Parent", img: "images/tribe-classic-anke.png",
       stats: "🇳🇱 Dutch, 36 · 👩‍👧‍👦 Parent + 2 kids · 📍 Word-of-mouth",
       tags: ["Week trip", "Kayak + child seat"],
       quote: "My sister did it last year — said it was amazing" },
-    { name: "Organizer Matthijs", tagline: "The Multi-Family Planner", img: "images/tribe-matthijs.png",
+    { name: "Organizer Matthijs", tagline: "The Multi-Family Planner", img: "images/tribe-classic-matthijs.png",
       stats: "🇳🇱 Dutch, 42 · 👨‍👩‍👧‍👦 2 families (6 ppl) · 📍 Google",
       tags: ["Week trip", "3 canoes", "Camping gear"],
       quote: "We go every year with our neighbors" },
+    { name: "Patient Bart", tagline: "The Belgian Family Dad", img: "images/tribe-classic-bart.png",
+      stats: "🇧🇪 Belgian, 39 · 👨‍👩‍👧‍👦 Family of 4 · 📍 Google",
+      tags: ["Week trip", "Child life vests", "Standard food"],
+      quote: "Getting the kids into nature — that's what it's all about" },
   ],
-  "Canoe Tribe Short": "Canoe Tribe Classic",
+  "Canoe Tribe Short": [
+    { name: "Gezin Janssens", tagline: "The Flemish Family", img: "images/tribe-short-janssens.png",
+      stats: "🇧🇪 Belgian, NL · 👨‍👩‍👧‍👦 Family of 4 · 📍 Instagram",
+      tags: ["3-day trip", "Child seat", "Own car"],
+      quote: "Tried the 3-day first to see if the kids would like it" },
+    { name: "Cautious Petra", tagline: "The Dutch Safety-First Mom", img: "images/tribe-short-petra.png",
+      stats: "🇳🇱 Dutch, 35 · 👩‍👧‍👦 Parent + 2 kids · 📍 Google",
+      tags: ["Short trip", "Child seats", "Standard food"],
+      quote: "Short enough to manage, long enough to be an adventure" },
+    { name: "Grandpa Henk", tagline: "The Dutch Bonding Grandad", img: "images/tribe-short-henk.png",
+      stats: "🇳🇱 Dutch, 58 · 👴 Grandpa + 2 grandkids · 📍 Word-of-mouth",
+      tags: ["Short trip", "Camping gear", "Standard food"],
+      quote: "The grandkids still talk about it — best decision I ever made" },
+    { name: "Active Stijn", tagline: "The Belgian Sporty Dad", img: "images/tribe-short-stijn.png",
+      stats: "🇧🇪 Belgian, 33 · 👨‍👩‍👧‍👦 Family of 3 · 📍 Instagram",
+      tags: ["Short trip", "Child carrier", "Meat foodpack"],
+      quote: "Active weekend with the little one — he loved every second" },
+  ],
   "The Packraft Trail Slovenia": [
-    { name: "Thrill-Seeker Thibault", tagline: "The Belgian Adventurer", img: "images/slovenia-thibault.png",
+    { name: "Daredevil Bram", tagline: "The Belgian Adventurer", img: "images/slovenia-bram.png",
       stats: "🇧🇪 Belgian, 28 · 👥 Duo with friend · 📍 Instagram",
       tags: ["Shuttle", "Hostel", "Classic food"],
       quote: "Saw the packraft videos on Insta — had to try it" },
@@ -3067,6 +3354,78 @@ const PERSONAS = {
       stats: "🇧🇪 Belgian (FR), 30 · 👥 Duo with partner · 📍 Instagram",
       tags: ["Flights BRU", "Camping", "Veggie"],
       quote: "We wanted something more adventurous than just hiking" },
+  ],
+  "The Packraft Trail Semoy": [
+    { name: "Renaud", tagline: "The Walloon Weekend Tripper", img: "images/semoy-renaud.png",
+      stats: "🇧🇪 Belgian (FR), 31 · 👥 Duo with partner · 📍 Word-of-mouth",
+      tags: ["Selfdrive", "Classic food", "Spring trip"],
+      quote: "A colleague kept talking about it — so we just booked it" },
+    { name: "Elke", tagline: "The Flemish Nature Seeker", img: "images/semoy-elke.png",
+      stats: "🇧🇪 Belgian (NL), 28 · 👥 Group of 3 · 📍 Instagram",
+      tags: ["Selfdrive", "No food", "Dog-friendly"],
+      quote: "Saw it on Instagram and couldn't stop thinking about it" },
+    { name: "Pieter", tagline: "The Dutch Ardennes Explorer", img: "images/semoy-pieter.png",
+      stats: "🇳🇱 Dutch, 34 · 👥 Duo with partner · 📍 Google",
+      tags: ["Selfdrive", "Classic food", "Camping gear"],
+      quote: "Googled packraft trips and this came up — the Ardennes were perfect" },
+    { name: "Katrin", tagline: "The German Solo Adventurer", img: "images/semoy-katrin.png",
+      stats: "🇩🇪 German, 29 · 🧍 Solo · 📍 Google",
+      tags: ["Own transport", "No food", "Spring"],
+      quote: "A short drive from home — didn't need much convincing" },
+  ],
+  "The Packraft Trail Mullerthal": [
+    { name: "Sofie", tagline: "The Belgian Trip Planner", img: "images/mullerthal-sofie.png",
+      stats: "🇧🇪 Belgian (NL), 30 · 👥 Duo with partner · 📍 Word-of-mouth",
+      tags: ["Selfdrive", "No food", "Summer trip"],
+      quote: "A friend did it with her partner and said it was the best weekend ever" },
+    { name: "Julia", tagline: "The German Nature Lover", img: "images/mullerthal-julia.png",
+      stats: "🇩🇪 German, 28 · 👥 Duo with friend · 📍 Instagram",
+      tags: ["Selfdrive", "No food", "Dog"],
+      quote: "The Luxembourg forest looked stunning on Instagram — we drove straight from Cologne" },
+    { name: "Yves", tagline: "The Returning Belgian Booker", img: "images/mullerthal-yves.png",
+      stats: "🇧🇪 Belgian (FR), 36 · 👥 Group of 4 · 📍 Newsletter",
+      tags: ["Classic food", "Camping gear", "August"],
+      quote: "Second time doing it — we come back every summer with a different group" },
+    { name: "Hanna", tagline: "The Dutch Summer Adventurer", img: "images/mullerthal-hanna.png",
+      stats: "🇳🇱 Dutch, 27 · 👥 Duo with partner · 📍 Google",
+      tags: ["Selfdrive", "No food", "Summer"],
+      quote: "We wanted a short adventure close to home — Luxembourg was perfect" },
+  ],
+  "The Packraft Trail Biesbosch": [
+    { name: "Fleur", tagline: "The Dutch Instagram Discoverer", img: "images/biesbosch-fleur.png",
+      stats: "🇳🇱 Dutch, 27 · 👥 Duo with friend · 📍 Instagram",
+      tags: ["Short trip", "Selfdrive", "Nature"],
+      quote: "Found it on Instagram — perfect for a spontaneous weekend" },
+    { name: "Marjolein", tagline: "The Girls Trip Organizer", img: "images/biesbosch-marjolein.png",
+      stats: "🇳🇱 Dutch, 33 · 👯 Group of 4 women · 📍 Instagram",
+      tags: ["Group trip", "Instagram", "Summer"],
+      quote: "Organized the whole girls weekend around this — everyone loved it" },
+    { name: "Rob", tagline: "The Dutch Nature Enthusiast", img: "images/biesbosch-rob.png",
+      stats: "🇳🇱 Dutch, 40 · 👥 Duo with partner · 📍 Word-of-mouth",
+      tags: ["Couple trip", "Selfdrive", "Repeat booker"],
+      quote: "A friend from work recommended it — we're both outdoor people" },
+    { name: "Emma", tagline: "The Belgian Day-Tripper", img: "images/biesbosch-emma.png",
+      stats: "🇧🇪 Belgian (NL), 29 · 👥 Duo with partner · 📍 Google",
+      tags: ["Selfdrive", "Weekend", "Dutch nature"],
+      quote: "Came from Antwerp for the weekend — the Biesbosch is so different from home" },
+  ],
+  "The Packraft Trail Bavaria": [
+    { name: "Felix", tagline: "The German Adventure Seeker", img: "images/bavaria-felix.png",
+      stats: "🇩🇪 German, 29 · 👥 Duo with partner · 📍 Instagram",
+      tags: ["Selfdrive", "Classic food", "Bavarian breakfast"],
+      quote: "Found it on Instagram — couldn't believe this existed right on our doorstep" },
+    { name: "Lena", tagline: "The German Nature Lover", img: "images/bavaria-lena.png",
+      stats: "🇩🇪 German, 31 · 👥 Duo with friend · 📍 Instagram",
+      tags: ["Selfdrive", "Veggie", "Camping gear"],
+      quote: "Bavaria has so much to offer — packrafting was the missing piece" },
+    { name: "Joost", tagline: "The Dutch Cross-Border Explorer", img: "images/bavaria-joost.png",
+      stats: "🇳🇱 Dutch, 27 · 👥 Duo with friend · 📍 Word-of-mouth",
+      tags: ["Long drive", "Classic food", "Bavarian breakfast"],
+      quote: "My German colleague told me about it — drove down from Rotterdam for the weekend" },
+    { name: "Thomas", tagline: "The Belgian Alpine Combo", img: "images/bavaria-thomas.png",
+      stats: "🇧🇪 Belgian, 33 · 👥 Group of 4 · 📍 Google",
+      tags: ["Selfdrive", "Classic food", "Multi-day"],
+      quote: "We combined it with a hiking weekend in the Alps — perfect add-on" },
   ],
   "The Canoe Trip Friesland": [
     { name: "Vriendinnen Lisa", tagline: "The Girls Trip Organizer", img: "images/friesland-lisa.png",
@@ -4422,6 +4781,44 @@ function updateAll() {
   const isMulti = filterTrips.size !== 1; // showing multiple trips (all, group, or multi-select)
 
   updateFilterNotice();
+
+  const hide2027 = ["scorecards","scorecards-secondary","timeline-section","booking-details-section","profile-section",
+     "persona-section","weekly-section","table-section","targets-section","webvisits-section",
+     "capacity-section","segment-charts","charts","booking-status","season-timeline","season-inline"];
+
+  if (filterYear === 2027) {
+    hide2027.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = "none"; });
+    document.getElementById("scorecards").style.display = "";
+    const _milestones = [
+      { label: "Website Launch",   date: "2026-10-28", icon: "🌐", color: "#3C6C54" },
+      { label: "Preregs Can Book", date: "2026-11-11", icon: "📋", color: "#1D769C" },
+      { label: "Bookings Open",    date: "2026-11-12", icon: "🎟️", color: "#7c3aed" },
+    ];
+    const _now = new Date(); _now.setHours(0,0,0,0);
+    document.getElementById("scorecards").innerHTML = `
+      <div style="grid-column:1/-1;font-size:0.68rem;font-weight:700;letter-spacing:0.1em;color:var(--text-muted);">2027 SEASON MILESTONES</div>
+      ${_milestones.map(m => {
+        const d = new Date(m.date); d.setHours(0,0,0,0);
+        const diff = Math.round((d - _now) / 86400000);
+        const past = diff < 0;
+        const countLabel = past ? "days ago" : diff === 0 ? "" : "days to go";
+        const countNum = past ? Math.abs(diff) : diff;
+        const dateText = new Date(m.date).toLocaleDateString("en",{day:"numeric",month:"long",year:"numeric"});
+        return `<div class="scorecard" style="border-left-color:${m.color};">
+          <div class="scorecard-label">${m.icon} ${m.label}</div>
+          <div class="scorecard-value"${past ? ` style="color:var(--text-muted);"` : ""}>${diff === 0 ? "Today" : countNum}</div>
+          <div class="scorecard-sub">${countLabel ? countLabel + " · " : ""}${dateText}</div>
+        </div>`;
+      }).join("")}`;
+    leadsCollapsed = false;
+    updateLeads();
+
+    return;
+  }
+
+  hide2027.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = ""; });
+
+  if (!document.getElementById("sc-total")) buildScorecards();
   updateScorecards(data);
   updateRevenueOverview();
   updatePaceTrackerCard();
@@ -4607,6 +5004,7 @@ const scrollBtn = document.getElementById("scroll-top");
 document.addEventListener("scroll", () => {
   scrollBtn.classList.toggle("visible", window.scrollY > 400);
 }, { passive: true });
+
 
 async function init() {
   initTheme();

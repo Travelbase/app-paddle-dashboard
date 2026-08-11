@@ -4,7 +4,11 @@
   "description": "Travelbase Team Paddle Dashboard",
   "main": "serve.js",
   "scripts": {
-    "start": "node serve.js"
+    "start": "node serve.js",
+    "sync:sheet": "node scripts/sync-to-sheet.js"
+  },
+  "dependencies": {
+    "googleapis": "^121.0.0"
   },
   "engines": {
     "node": "20.x"

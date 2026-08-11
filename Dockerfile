@@ -10,7 +10,7 @@
 FROM node:20-alpine
 WORKDIR /app
 
-COPY package.json serve.js dashboard.html ./
+COPY package.json serve.js dashboard.html favicon.svg ./
 COPY images ./images
 
 ENV NODE_ENV=production \
