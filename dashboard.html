@@ -919,6 +919,7 @@ let charts = {};
 let lastRefreshed = null;
 let recentPeriod = "day"; // "day", "week", "month"
 let leadsPeriod = "day";
+let preregCompareMode = "todate"; // "todate" (same point in season) | "full" (whole previous seasons)
 let tableCollapsed = true;
 let weeklyCollapsed = true;
 let profileCollapsed = true;
@@ -1598,6 +1599,16 @@ const LEAD_BRAND_MAP = {
   "PRTSLOV": ["The Packraft Trail Slovenia"],
   "FRIES":   ["The Canoe Trip Friesland"],
 };
+const LEAD_BRAND_LABELS = { TCT: "The Canoe Trip", CT: "Canoe Tribe", TKT: "The Kayak Trip", PRT: "Packraft Micro's", PRTSLOV: "The Packraft Trail Slovenia", FRIES: "Friesland" };
+const LEAD_BRAND_COLORS = { TCT: "#3C6C54", CT: "#3E7664", TKT: "#1D769C", PRT: "#356968", PRTSLOV: "#eabd6c", FRIES: "#C0E4D2" };
+const LEAD_BRAND_ORDER  = ["TCT", "CT", "TKT", "PRT", "PRTSLOV", "FRIES"];
+// Packraft Micro's: destination is only recoverable from the Typeform project name.
+const PRT_DEST = { slov:"Slovenia", bb:"Biesbosch", mul:"Mullerthal", mull:"Mullerthal", semoy:"Semoy", ard:"Ardennes", bzh:"Bretagne", bav:"Bavaria", bal:"Balkan", aus:"Austria" };
+function getPRTDest(r) {
+  const p = (r.project||"").toLowerCase();
+  for (const [k,v] of Object.entries(PRT_DEST)) { if (p.includes(k)) return v; }
+  return null;
+}
 
 function getLeadYear(r) {
   const m = (r.typeform || "").match(/(\d{2})/);
@@ -1699,6 +1710,195 @@ function renderPreregTracker() {
     </div>`;
 }
 
+// Pre-registrations per language per project, 2027 vs every earlier season with prereg leads.
+// "To date" aligns past seasons on the same point in season (dates shifted forward, cut at today),
+// exactly like the "% preregs vs 'YY" scorecard in updateLeads(). "Full season" shows their final totals.
+function renderPreregLangComparison() {
+  const el = document.getElementById("prereg-lang-compare-inline");
+  if (!el) return;
+
+  const curYear = 2027;
+  const LANGS = ["nl", "fr", "de", "en"];
+  const langCols = filterLang === "all" ? LANGS : [filterLang.toLowerCase()];
+  const langOf = r => { const l = (r.language || "").toLowerCase(); return LANGS.includes(l) ? l : "en"; };
+  const short = y => String(y).slice(2);
+  const toDate = preregCompareMode === "todate";
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const cutoffLabel = new Date(todayStr).toLocaleDateString("en", { day: "numeric", month: "short" });
+
+  // Same trip/group/language filters as the rest of the Leads card.
+  const preregs = getFilteredLeads().filter(r => effectiveAction(r) === "preregistration" && getLeadYear(r));
+  const seasons = [...new Set([...preregs.map(getLeadYear), curYear])].sort((a, b) => a - b);
+  const prevSeason = [...seasons].reverse().find(y => y < curYear) || null;
+
+  const inScope = r => {
+    const y = getLeadYear(r);
+    if (y === curYear) return !r.date || r.date <= todayStr;
+    if (!toDate) return true;
+    if (!r.date) return false;
+    const d = new Date(r.date);
+    d.setFullYear(d.getFullYear() + (curYear - y));
+    return d.toISOString().slice(0, 10) <= todayStr;
+  };
+
+  // counts[rowKey][season] = { nl, fr, de, en, total }
+  const counts = {};
+  const bump = (key, y, lang) => {
+    const s = counts[key] || (counts[key] = {});
+    const c = s[y] || (s[y] = { nl: 0, fr: 0, de: 0, en: 0, total: 0 });
+    c[lang]++; c.total++;
+  };
+  preregs.filter(inScope).forEach(r => {
+    const b = effectiveBrand(r), y = getLeadYear(r), l = langOf(r);
+    bump(b, y, l);
+    if (b === "PRT") { const dest = getPRTDest(r); if (dest) bump("PRT:" + dest, y, l); }
+    bump("__total", y, l);
+  });
+  const get = (key, y) => (counts[key] || {})[y] || {};
+  const sumAll = key => seasons.reduce((n, y) => n + (get(key, y).total || 0), 0);
+
+  // Brands with any prereg in any season (pre-cutoff, so a brand that hasn't started '27 still shows).
+  const present = [...new Set(preregs.map(effectiveBrand))];
+  const brands = [...LEAD_BRAND_ORDER.filter(b => present.includes(b)), ...present.filter(b => !LEAD_BRAND_ORDER.includes(b)).sort()];
+  const prtDests = [...new Set(preregs.filter(r => effectiveBrand(r) === "PRT").map(getPRTDest).filter(Boolean))]
+    .sort((a, b) => sumAll("PRT:" + b) - sumAll("PRT:" + a) || a.localeCompare(b));
+
+  const subLabel = toDate
+    ? `Previous seasons counted up to the same point in season (to ${cutoffLabel})`
+    : `Previous seasons: full season · '${short(curYear)}: to ${cutoffLabel}`;
+  const seasonSuffix = y => y === curYear ? "" : (toDate ? " to date" : " full");
+  const header = `
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+      <div class="scorecard-label" style="margin:0;">Pre-registrations per language — '${short(curYear)} vs previous seasons
+        <span class="sc-toggle" id="prereg-compare-toggle"><button data-m="todate">To date</button><button data-m="full">Full season</button></span>
+      </div>
+      <div style="font-size:0.68rem;color:var(--text-muted);">${subLabel}</div>
+    </div>`;
+
+  if (!preregs.length) {
+    el.innerHTML = `<div style="margin:24px 0;padding:20px;border:1px solid var(--border);border-radius:var(--radius);">${header}
+      <div style="font-size:0.8rem;color:var(--text-muted);">No pre-registration leads for the current filters.</div></div>`;
+    wireToggle();
+    return;
+  }
+
+  const numCell = (v, { sub = false, bold = false, first = false, cur = false } = {}) =>
+    `<td style="padding:${sub ? '5px 6px' : '8px 6px'};text-align:center;${sub ? 'font-size:0.75rem;' : ''}${bold ? 'font-weight:700;' : ''}${first ? 'border-left:1px solid var(--border);' : ''}color:${v ? (cur ? '#7c3aed' : 'var(--text)') : 'var(--text-muted)'};">${v ? v.toLocaleString() : "–"}</td>`;
+
+  const deltaCell = (cur, prev, sub = false) => {
+    if (!prevSeason) return "";
+    const base = `padding:${sub ? '5px 6px' : '8px 6px'};text-align:center;border-left:1px solid var(--border);white-space:nowrap;`;
+    if (!cur && !prev) return `<td style="${base}color:var(--text-muted);">–</td>`;
+    const diff = cur - prev;
+    const pct = prev ? Math.round(diff / prev * 100) : null;
+    const sign = diff > 0 ? "+" : "";
+    const txt = sign + diff.toLocaleString() + (pct === null ? " (new)" : ` (${sign}${pct}%)`);
+    const tip = `'${short(prevSeason)}${toDate ? ' to date' : ''}: ${prev.toLocaleString()} → '${short(curYear)}: ${cur.toLocaleString()}`;
+    return `<td style="${base}" data-tip="${tip}"><span class="${diff >= 0 ? 'yoy-pos' : 'yoy-neg'}" style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:${sub ? '0.68rem' : '0.72rem'};font-weight:600;">${txt}</span></td>`;
+  };
+
+  const rowHtml = (label, key, { sub = false, color = null, total = false, noBottom = false } = {}) => {
+    const cells = seasons.map(y => {
+      const c = get(key, y);
+      return langCols.map((l, i) => numCell(c[l] || 0, { sub, first: i === 0 })).join("")
+        + numCell(c.total || 0, { sub, bold: true, cur: y === curYear });
+    }).join("");
+    const dot = color ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:6px;"></span>` : "";
+    const labelCell = sub
+      ? `<td style="padding:5px 12px 5px 28px;font-size:0.75rem;color:var(--text-muted);white-space:nowrap;">↳ ${label}</td>`
+      : `<td style="padding:8px 12px;font-weight:${total ? 700 : 600};white-space:nowrap;">${dot}${label}</td>`;
+    const rowStyle = (noBottom ? "border-bottom:none;" : "border-bottom:1px solid var(--border);")
+      + (sub ? "background:rgba(0,0,0,0.015);" : "")
+      + (total ? "border-top:2px solid var(--border);font-weight:700;" : "");
+    const curTotal = get(key, curYear).total || 0;
+    const prevTotal = prevSeason ? (get(key, prevSeason).total || 0) : 0;
+    return `<tr style="${rowStyle}">${labelCell}${cells}${deltaCell(curTotal, prevTotal, sub)}</tr>`;
+  };
+
+  // Bar colours: '27 purple like the cumulative line, previous season mid-grey, older seasons light grey.
+  const seasonColor = y => y === curYear ? "rgba(124,58,237,0.75)" : y === prevSeason ? "rgba(128,128,128,0.55)" : "rgba(128,128,128,0.28)";
+  const chartLegend = seasons.map(y => `<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${seasonColor(y)};margin-right:4px;vertical-align:middle;"></span>'${short(y)}${seasonSuffix(y)}</span>`).join("");
+
+  const bodyRows = brands.map(b => {
+    const hasSubs = b === "PRT" && prtDests.length > 0;
+    const main = rowHtml(LEAD_BRAND_LABELS[b] || b, b, { color: LEAD_BRAND_COLORS[b] || "var(--accent)", noBottom: hasSubs });
+    if (!hasSubs) return main;
+    return main + prtDests.map(d => rowHtml(d, "PRT:" + d, { sub: true })).join("");
+  }).join("") + rowHtml("Total", "__total", { total: true });
+
+  el.innerHTML = `
+    <div style="margin:24px 0;padding:20px;border:1px solid var(--border);border-radius:var(--radius);">
+      ${header}
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+          <thead>
+            <tr style="text-align:center;">
+              <th rowspan="2" style="padding:8px 12px;text-align:left;vertical-align:bottom;border-bottom:2px solid var(--border);">Project</th>
+              ${seasons.map(y => `<th colspan="${langCols.length + 1}" style="padding:6px 6px 2px;border-left:1px solid var(--border);font-size:0.78rem;color:${y === curYear ? '#7c3aed' : 'var(--text-muted)'};">'${short(y)}${seasonSuffix(y)}</th>`).join("")}
+              ${prevSeason ? `<th rowspan="2" style="padding:8px 6px;border-left:1px solid var(--border);border-bottom:2px solid var(--border);vertical-align:bottom;font-size:0.72rem;white-space:nowrap;">Δ '${short(curYear)} vs '${short(prevSeason)}</th>` : ""}
+            </tr>
+            <tr style="text-align:center;">
+              ${seasons.map(y => langCols.map((l, i) => `<th style="padding:4px 6px 8px;font-weight:600;font-size:0.7rem;color:var(--text-muted);border-bottom:2px solid var(--border);${i === 0 ? 'border-left:1px solid var(--border);' : ''}">${l.toUpperCase()}</th>`).join("")
+                + `<th style="padding:4px 6px 8px;font-weight:700;font-size:0.7rem;border-bottom:2px solid var(--border);">Total</th>`).join("")}
+            </tr>
+          </thead>
+          <tbody>${bodyRows}</tbody>
+        </table>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:20px;">
+        <div class="scorecard-label" style="margin:0;">Pre-registrations per project</div>
+        <div style="display:flex;gap:12px;font-size:0.68rem;color:var(--text-muted);">${chartLegend}</div>
+      </div>
+      <div class="chart-wrapper" style="height:220px;margin-top:8px;"><canvas id="ch-prereg-compare"></canvas></div>
+    </div>`;
+
+  wireToggle();
+
+  // Grouped bars: one bar per season per project; tooltip adds the language split.
+  const ctx = document.getElementById("ch-prereg-compare");
+  if (ctx) {
+    const existing = Chart.getChart(ctx);
+    if (existing) existing.destroy();
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: brands.map(b => LEAD_BRAND_LABELS[b] || b),
+        datasets: seasons.map(y => ({
+          label: `'${short(y)}${seasonSuffix(y)}`,
+          data: brands.map(b => get(b, y).total || 0),
+          backgroundColor: seasonColor(y),
+          borderRadius: 4,
+          borderSkipped: false,
+        })),
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          tooltip: { callbacks: { afterLabel: item => {
+            const c = get(brands[item.dataIndex], seasons[item.datasetIndex]);
+            return langCols.filter(l => c[l]).map(l => l.toUpperCase() + " " + c[l]).join(" · ");
+          } } },
+        },
+        scales: {
+          x: { ticks: { color: "var(--text-muted)", font: { size: 10 } }, grid: { display: false } },
+          y: { ticks: { color: "var(--text-muted)", font: { size: 10 }, precision: 0 }, grid: { color: "rgba(128,128,128,0.1)" }, beginAtZero: true },
+        },
+      },
+    });
+  }
+
+  function wireToggle() {
+    const tg = document.getElementById("prereg-compare-toggle");
+    if (!tg) return;
+    tg.querySelectorAll("button").forEach(btn => {
+      if (btn.dataset.m === preregCompareMode) btn.classList.add("active");
+      btn.addEventListener("click", () => { preregCompareMode = btn.dataset.m; renderPreregLangComparison(); });
+    });
+  }
+}
+
 function updateLeads() {
   const el = document.getElementById("leads-section");
   if (!el || !leadsData.length) { if (el) el.innerHTML = ""; return; }
@@ -1781,8 +1981,8 @@ function updateLeads() {
   const actionLabels = { preregistration: "Pre-registrations", interest: "Interest", magazine: "Magazine", waitinglist: "Waiting List", webinar: "Webinar", download: "Downloads", competition: "Contest", abandoned: "Abandoned", quote: "Quote", review: "Review", offerte: "Offerte" };
 
   // 7. Leads per brand
-  const brandLabels = { TCT: "The Canoe Trip", CT: "Canoe Tribe", TKT: "The Kayak Trip", PRT: "Packraft Micro's", PRTSLOV: "The Packraft Trail Slovenia", FRIES: "Friesland" };
-  const brandColor = { TCT: "#3C6C54", CT: "#3E7664", TKT: "#1D769C", PRT: "#356968", PRTSLOV: "#eabd6c", FRIES: "#C0E4D2" };
+  const brandLabels = LEAD_BRAND_LABELS;
+  const brandColor = LEAD_BRAND_COLORS;
 
   const prevYearShort = String(prevYear).slice(2);
   const curYearShort = String(curYear).slice(2);
@@ -1818,7 +2018,7 @@ function updateLeads() {
         </div>
         <div class="chart-wrapper" style="height:280px;margin-top:8px;"><canvas id="ch-leads-cumulative"></canvas></div>
 
-        ${curYear === 2027 ? `<div id="prereg-tracker-inline"></div>` : ""}
+        ${curYear === 2027 ? `<div id="prereg-tracker-inline"></div><div id="prereg-lang-compare-inline"></div>` : ""}
 
         <div style="margin-top:20px;">
           <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
@@ -1835,12 +2035,6 @@ function updateLeads() {
             </thead>
             <tbody>
               ${(() => {
-                const PRT_DEST = { slov:"Slovenia", bb:"Biesbosch", mul:"Mullerthal", mull:"Mullerthal", semoy:"Semoy", ard:"Ardennes", bzh:"Bretagne", bav:"Bavaria", bal:"Balkan", aus:"Austria" };
-                function getPRTDest(r) {
-                  const p = (r.project||"").toLowerCase();
-                  for (const [k,v] of Object.entries(PRT_DEST)) { if (p.includes(k)) return v; }
-                  return null;
-                }
                 const langTip = (leads) => ["NL","FR","DE","EN"].map(l => { const c = leads.filter(r => (r.language||"").toUpperCase() === l).length; return c ? l + ": " + c : null; }).filter(Boolean).join("\n") || "";
                 return Object.entries(brandsCur).sort((a, b) => b[1] - a[1]).map(([brand, total]) => {
                   const brandLeads = curLeads.filter(r => effectiveBrand(r) === brand);
@@ -1886,6 +2080,7 @@ function updateLeads() {
   `;
 
   renderPreregTracker();
+  renderPreregLangComparison();
 
   // Wire up leads period toggle
   const _lpt = document.getElementById("leads-period-toggle");

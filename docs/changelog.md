@@ -1,5 +1,18 @@
 # Changelog — Team Paddle Dashboard
 
+## 2026-10-06 — Prereg comparison per language per project (2027 view)
+
+- New "Pre-registrations per language — '27 vs previous seasons" block in the 2027 view, directly
+  under the Pre-Registration Tracker: one row per project (Packraft Micro's split by destination),
+  one column group per season that has prereg leads (NL / FR / DE / EN / Total), plus a Δ column
+  vs the previous season. A "To date / Full season" toggle aligns past seasons on the same point in
+  season (same shift-and-cut logic as the "% preregs vs 'YY" scorecard) or shows their final totals.
+  A grouped bar chart underneath repeats the per-project totals per season. Respects the
+  trip/group/language filters.
+- Hoisted `PRT_DEST` / `getPRTDest()` and the lead brand label/colour/order maps to module scope
+  (`LEAD_BRAND_LABELS`, `LEAD_BRAND_COLORS`, `LEAD_BRAND_ORDER`) so the leads table and the new
+  block share them.
+
 ## 2026-06-18 — Export keys moved to Secret Manager; repo renamed
 
 - Removed all 21 export-report `id`/`key` pairs from `dashboard.html`. The browser now sends only a
